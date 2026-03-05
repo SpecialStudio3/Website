@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Special Studio</title>
+  <meta charset="UTF-8">
+  <script>
+
+window.addEventListener("scroll", function () {
+  let offset = window.pageYOffset;
+  document.body.style.backgroundPosition = "0px " + (offset * 0.5) + "px";
+});
+
+</script>
+<style>
+
+/* Small screens (laptops) */
+@media (max-width: 1200px) {
+body {
+zoom:110%;
+}
+}
+
+/* Medium screens */
+@media (min-width:1201px) and (max-width:1800px) {
+body {
+zoom:130%;
+}
+}
+
+/* Very large monitors */
+@media (min-width:1801px) {
+body {
+zoom:160%;
+}
+}
+
+</style>
+</head>
+
+
+
+
+<body style=" background-image:url('stars.gif'); background-repeat:repeat;" bgcolor="#000000" text="white" link="#FFFF00" vlink="#FF00FF" alink="#FF0000">
+
+<!-- MIDI AUTOPLAY (TRUE 90s MOVE) -->
+<bgsound src="molly.mid" loop="infinite">
+
+<center>
+
+<!-- UNDER CONSTRUCTION -->
+<img src="up2.gif">
+
+<br><br>
+
+<table width="900" border="5" bordercolor="#FF00FF" bgcolor="#000080" cellpadding="10">
+<tr>
+<td colspan="2" align="center">
+<font size="7" face="Impact" color="#FFFF00">
+<b>Welcome to Special Studio</b>
+</font>
+<br>
+<font size="4" face="Courier New" color="#FF0000">
+<blink>NOW BOOKING 2026 SESSIONS!</blink>
+</font>
+<br>
+<font size="2" face="Courier New" color="#00FFFF">
+100% TAPE • 100% MONO • 100 % REAL
+</font>
+</td>
+</tr>
+
+<tr>
+
+
+
+<!-- SIDEBAR -->
+<td width="250" valign="top" bgcolor="#000000">
+<font face="Comic Sans MS" color="#FFFFFF">
+<hr color="#FF00FF">
+
+<b>Language</b>
+<br>
+<a href="index.html">English</a> <a href="#">Swedish</a>
+
+
+<hr color="#FF00FF">
+
+<b>Navigation</b>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="#">Gallery</a></li>
+<li><a href="#">Gear</a></li>
+<li><a href="#">Artists</a></li>
+<li><a href="#">Contact us</a></li>
+<li><a href="#">Guestbook</a></li>
+
+</ul>
+
+<hr color="#FF00FF">
+
+<b>Visitor Counter</b>
+<br><br>
+
+<div align=center><a href='https://www.counter12.com'><img src='https://www.counter12.com/img-bA0Zya7y7dB6AcBw-9.gif' border='0' alt='free counter'></a><script type='text/javascript' src='https://www.counter12.com/ad.js?id=bA0Zya7y7dB6AcBw'></script></div>
+
+<hr color="#FF00FF">
+
+
+
+<font size="1">
+Phone: (0)452087130
+<br>
+
+Fax: (0)452099408
+<br>
+Email: chmforsman(at)gmail.com
+<br>
+</font>
+
+
+<hr color="#FF00FF">
+
+<center>
+
+<font face="Courier New" color="lime"><b>SNAKE</b></font><br>
+
+<canvas id="snakeGame" width="200" height="200" style="background:black;border:2px solid #FF00FF;"></canvas>
+
+<br>
+
+
+
+<font face="Courier New" size="2" color="lime">
+Score: <span id="score">0</span>
+</font>
+
+<br>
+
+<font face="Courier New" size="2" color="red" id="gameOver" style="visibility:hidden;">
+<b>GAME OVER</b>
+</font>
+
+
+
+<br>
+
+<button onclick="startGame()">Restart</button>
+
+</center>
+
+<script>
+const canvas = document.getElementById("snakeGame");
+const ctx = canvas.getContext("2d");
+
+const grid = 20; // 20x20 tiles
+const tileSize = 10;
+
+let snake, food, dir, score;
+let gameLoop, blinkLoop, gameRunning=false;
+let nextDir = null;
+let moveProgress = 0; // progress 0->1 per tick
+let glowFrames = 0; // glow when eating
+
+function startGame(){
+    clearInterval(gameLoop);
+    clearInterval(blinkLoop);
+
+    snake = [
+        {x:5,y:5},
+        {x:4,y:5},
+        {x:3,y:5},
+        {x:2,y:5}
+    ];
+
+    food = {x:8,y:8};
+    dir = {x:1,y:0};
+    nextDir = null;
+    moveProgress = 0;
+    score = 0;
+    glowFrames = 0;
+    gameRunning = true;
+
+    document.getElementById("score").innerText = score;
+    document.getElementById("gameOver").style.visibility = "hidden";
+
+    gameLoop = setInterval(update,30); // fast tick for smooth animation
+}
+
+// WASD input
+document.addEventListener("keydown", function(e){
+    if(!gameRunning) return;
+
+    let newDir = dir;
+
+    if(e.key==="w") newDir = {x:0,y:-1};
+    if(e.key==="s") newDir = {x:0,y:1};
+    if(e.key==="a") newDir = {x:-1,y:0};
+    if(e.key==="d") newDir = {x:1,y:0};
+
+    nextDir = newDir;
+});
+
+function update(){
+    if(!gameRunning) return;
+
+    // Apply queued direction (prevent reverse)
+    if(nextDir && snake.length>1){
+        const nextHead = {x:snake[0].x + nextDir.x, y:snake[0].y + nextDir.y};
+        if(!(nextHead.x===snake[1].x && nextHead.y===snake[1].y)){
+            dir = nextDir;
+        }
+    } else if(nextDir && snake.length===1){
+        dir = nextDir;
+    }
+
+    moveProgress += 0.2; // smooth movement
+
+    if(moveProgress >= 1){
+        moveProgress = 0;
+
+        // Compute next head
+        let head = {x:snake[0].x + dir.x, y:snake[0].y + dir.y};
+
+        // Wrap around walls
+        if(head.x<0) head.x=grid-1;
+        if(head.x>=grid) head.x=0;
+        if(head.y<0) head.y=grid-1;
+        if(head.y>=grid) head.y=0;
+
+        // Collision with self
+        if(snake.some(s=>s.x===head.x && s.y===head.y)){
+            gameOver();
+            return;
+        }
+
+        snake.unshift(head);
+
+        // Eat food
+        if(head.x===food.x && head.y===food.y){
+            score++;
+            document.getElementById("score").innerText = score;
+
+            glowFrames = 5; // number of frames for glow effect
+
+            // new food
+            food = {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)};
+        } else {
+            snake.pop();
+        }
+    }
+
+    draw();
+    nextDir = null;
+    if(glowFrames>0) glowFrames--;
+}
+
+function draw(){
+    ctx.fillStyle="black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // draw snake smoothly
+    for(let i=0;i<snake.length;i++){
+        const s = snake[i];
+        const next = snake[i-1] || s;
+
+        // calculate smooth position based on previous segment
+        let x = s.x*tileSize;
+        let y = s.y*tileSize;
+        if(i===0){
+            x = s.x*tileSize + dir.x*tileSize*moveProgress;
+            y = s.y*tileSize + dir.y*tileSize*moveProgress;
+        } else {
+            const prev = snake[i-1];
+            x = s.x*tileSize + (prev.x - s.x)*tileSize*moveProgress;
+            y = s.y*tileSize + (prev.y - s.y)*tileSize*moveProgress;
+        }
+
+        const hue = (i*20 + Date.now()/10)%360;
+        ctx.fillStyle = `hsl(${hue},100%,50%)`;
+        ctx.fillRect(x,y,tileSize-1,tileSize-1);
+
+        // glow effect if eating
+        if(glowFrames>0){
+            ctx.fillStyle = `rgba(${(i*20)%255},255,255,0.3)`;
+            ctx.fillRect(x-2,y-2,tileSize+4,tileSize+4);
+        }
+    }
+
+    // draw food
+    ctx.fillStyle="red";
+    ctx.fillRect(food.x*tileSize,food.y*tileSize,tileSize-1,tileSize-1);
+}
+
+function gameOver(){
+    clearInterval(gameLoop);
+    gameRunning=false;
+
+    const go = document.getElementById("gameOver");
+    go.style.visibility="visible";
+
+    blinkLoop = setInterval(()=>{
+        go.style.visibility = go.style.visibility==="hidden"?"visible":"hidden";
+        if(gameRunning){
+            clearInterval(blinkLoop);
+        }
+    },400);
+}
+
+startGame();
+</script>
+<hr color="#FF00FF">
+
+</font>
+
+
+<!-- MAIN CONTENT -->
+<td valign="top" bgcolor="blue">
+
+<marquee scrollamount="8" bgcolor="#FFFF00">
+<font face="Arial Black" color="#000000">
+★ REAL DRUMS ★ REAL AMPS ★ REAL TAPE SATURATION ★
+</font>
+</marquee>
+
+<br><br>
+
+<font size="6" face="Arial" color="red">
+<b>SPECIAL STUDIO</b>
+</font>
+<h2>Recording studio in Nykarleby since 2018</h2>
+
+<p>
+
+
+<b>Special Studio</b> is a recording studio and independent record label based in Nykarleby. <br>
+The studio focuses primarily on the sound and style of <b>1950's Rock N Roll</b>, <br>
+with an emphasis on authentic recording techniques.
+<br>
+<br>
+
+<b>Unlike</b> many modern studios that rely heavily on digital tools, Special Studio operates with an <b>8-channel tape recorder</b> and a analog compressors & 
+mixing consoles. We also use real acoustic pianos, drums and tube amps. This approach allows artists to achieve the warm, 
+dynamic sound associated with the golden era of rock, rhythm & blues, and early pop music.
+
+<br><br>
+
+Special Studio works with both local and international artists who share a passion for this type of music.
+
+
+ <br><br>
+ 
+Check out the featured releases
+
+<br><br>
+
+<!-- releases -->
+
+
+
+
+<br><br>
+
+<center>
+
+<font size="5" face="Arial" color="yellow">
+<b>FEATURED RELEASES</b>
+</font>
+
+<br><br>
+
+<table width="100%" border="4" bordercolor="#FF00FF" bgcolor="#000000" cellpadding="8">
+<tr>
+
+<!-- Release 1 -->
+<td align="center" width="33%">
+<img src="moon.png" width="150" border="0"><br><br>
+<font color="white"><b>By The Light Of The Silvery Moon<br></b></font><br><br>
+
+<audio id="song1">
+<source src="bythelight.mp3" type="audio/mpeg">
+</audio>
+
+<br><br>
+
+<!-- Play/Pause Button -->
+<button onclick="playPause('song1')">Play / Pause</button>
+
+<br><br>
+
+<!-- Seek slider -->
+<input type="range" id="seek1" min="0" max="100" value="0" step="0.1" style="width:140px;">
+
+<br><br>
+
+Volume<br>
+<input type="range" min="0" max="1" step="0.1" value="1" oninput="setVolume('song1', this.value)" style="width:140px;">
+
+</td>
+
+<!-- Release 2 -->
+<td align="center" width="33%">
+<img src="2025.jpg" width="150" border="0"><br><br>
+<font color="white"><b>Christopher Forsman & His Time Traveling Band LIVE 2025</b></font><br><br>
+
+<audio id="song2">
+<source src="2025.mp3" type="audio/mpeg">
+</audio>
+
+<br><br>
+
+<button onclick="playPause('song2')">Play / Pause</button>
+
+<br><br>
+
+<input type="range" id="seek2" min="0" max="100" value="0" step="0.1" style="width:140px;">
+
+<br><br>
+
+Volume<br>
+<input type="range" min="0" max="1" step="0.1" value="1" oninput="setVolume('song2', this.value)" style="width:140px;">
+
+</td>
+
+<!-- Release 3 -->
+<td align="center" width="33%">
+<img src="60.jpg" width="150" border="0"><br><br>
+<font color="white"><b>60 På 80-Väg<br><br></b></font><br><br>
+
+<audio id="song3">
+<source src="60.mp3" type="audio/mpeg">
+</audio>
+
+<br><br>
+
+<button onclick="playPause('song3')">Play / Pause</button>
+
+<br><br>
+
+<input type="range" id="seek3" min="0" max="100" value="0" step="0.1" style="width:140px;">
+
+<br><br>
+
+Volume<br>
+<input type="range" min="0" max="1" step="0.1" value="1" oninput="setVolume('song3', this.value)" style="width:140px;">
+
+</td>
+
+</tr>
+</table>
+
+</center>
+
+<!-- releases -->
+
+<br>
+
+<br>
+
+<script>
+
+const canvas = document.getElementById("snakeGame");
+const ctx = canvas.getContext("2d");
+
+const grid = 10;
+let count = 0;
+
+let snake = {
+  x: 100,
+  y: 100,
+  dx: grid,
+  dy: 0,
+  cells: [],
+  maxCells: 4
+};
+
+let apple = {
+  x: 160,
+  y: 160
+};
+
+function getRandomInt(min,max){
+  return Math.floor(Math.random()*(max-min))+min;
+}
+
+function gameLoop(){
+  requestAnimationFrame(gameLoop);
+
+  if(++count < 6){
+    return;
+  }
+
+  count = 0;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  snake.x += snake.dx;
+  snake.y += snake.dy;
+
+  if(snake.x < 0) snake.x = canvas.width-grid;
+  else if(snake.x >= canvas.width) snake.x = 0;
+
+  if(snake.y < 0) snake.y = canvas.height-grid;
+  else if(snake.y >= canvas.height) snake.y = 0;
+
+  snake.cells.unshift({x:snake.x,y:snake.y});
+
+  if(snake.cells.length > snake.maxCells){
+    snake.cells.pop();
+  }
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(apple.x,apple.y,grid-1,grid-1);
+
+  ctx.fillStyle = "lime";
+
+  snake.cells.forEach(function(cell,index){
+
+    ctx.fillRect(cell.x,cell.y,grid-1,grid-1);
+
+    if(cell.x === apple.x && cell.y === apple.y){
+      snake.maxCells++;
+      apple.x = getRandomInt(0,20)*grid;
+      apple.y = getRandomInt(0,20)*grid;
+    }
+
+    for(let i=index+1;i<snake.cells.length;i++){
+      if(cell.x === snake.cells[i].x && cell.y === snake.cells[i].y){
+        snake.x = 100;
+        snake.y = 100;
+        snake.cells = [];
+        snake.maxCells = 4;
+        snake.dx = grid;
+        snake.dy = 0;
+
+        apple.x = getRandomInt(0,20)*grid;
+        apple.y = getRandomInt(0,20)*grid;
+      }
+    }
+
+  });
+}
+
+document.addEventListener("keydown",function(e){
+
+  if(e.key === "ArrowLeft" && snake.dx === 0){
+    snake.dx = -grid;
+    snake.dy = 0;
+  }
+
+  else if(e.key === "ArrowUp" && snake.dy === 0){
+    snake.dy = -grid;
+    snake.dx = 0;
+  }
+
+  else if(e.key === "ArrowRight" && snake.dx === 0){
+    snake.dx = grid;
+    snake.dy = 0;
+  }
+
+  else if(e.key === "ArrowDown" && snake.dy === 0){
+    snake.dy = grid;
+    snake.dx = 0;
+  }
+
+});
+
+requestAnimationFrame(gameLoop);
+
+</script>
+
+<script>
+function playPause(id){
+  let a = document.getElementById(id);
+  if(a.paused){ a.play(); } else { a.pause(); }
+}
+
+function setVolume(id, v){
+  document.getElementById(id).volume = v;
+}
+
+// Seek sliders
+const seekSliders = [
+  {audio:'song1', slider:'seek1'},
+  {audio:'song2', slider:'seek2'},
+  {audio:'song3', slider:'seek3'}
+];
+
+seekSliders.forEach(obj => {
+  let audio = document.getElementById(obj.audio);
+  let slider = document.getElementById(obj.slider);
+
+  // Update slider as song plays
+  audio.addEventListener('timeupdate', function(){
+    if(audio.duration) slider.value = (audio.currentTime / audio.duration) * 100;
+  });
+
+  // Jump to position when slider is dragged
+  slider.addEventListener('input', function(){
+    if(audio.duration) audio.currentTime = (slider.value / 100) * audio.duration;
+  });
+});
+</script>
+
+
+<center>Copyright © Christopher Forsman 2017 </center>
+</body>
+
+
+
+</html>
