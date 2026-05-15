@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Alistair Martin</title>
+  <meta charset="UTF-8">
+  <script>
+
+window.addEventListener("scroll", function () {
+  let offset = window.pageYOffset;
+  document.body.style.backgroundPosition = "0px " + (offset * 0.5) + "px";
+});
+
+</script>
+<style>
+
+/* Small screens (laptops) */
+@media (max-width: 1200px) {
+body {
+zoom:110%;
+}
+}
+
+/* Medium screens */
+@media (min-width:1201px) and (max-width:1800px) {
+body {
+zoom:130%;
+}
+}
+
+/* Very large monitors */
+@media (min-width:1801px) {
+body {
+zoom:160%;
+}
+}
+
+</style>
+</head>
+
+
+
+
+<body style=" background-image:url('stars.gif'); background-repeat:repeat;" bgcolor="#000000" text="white" link="#FFFF00" vlink="#FF00FF" alink="#FF0000">
+
+<!-- MIDI AUTOPLAY (TRUE 90s MOVE) -->
+<bgsound src="molly.mid" loop="infinite">
+
+<center>
+
+<!-- UNDER CONSTRUCTION -->
+<img src="up2.gif">
+
+<br><br>
+
+<table width="900" border="5" bordercolor="#FF00FF" bgcolor="#000080" cellpadding="10">
+<tr>
+<td colspan="2" align="center">
+<font size="7" face="Impact" color="#FFFF00">
+<b>Welcome to Special Studio</b>
+</font>
+<br>
+<font size="4" face="Courier New" color="#FF0000">
+<blink>NOW BOOKING 2026 SESSIONS!</blink>
+</font>
+<br>
+<font size="2" face="Courier New" color="#00FFFF">
+100% TAPE • 100% MONO • 100 % REAL
+</font>
+</td>
+</tr>
+
+<tr>
+
+
+
+<!-- SIDEBAR -->
+<td width="250" valign="top" bgcolor="#000000">
+<font face="Comic Sans MS" color="#FFFFFF">
+<hr color="#FF00FF">
+
+<b>Language</b>
+<br>
+<a href="index.html">English</a> <a href="#">Swedish</a>
+
+
+<hr color="#FF00FF">
+
+<b>Navigation</b>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="alistair.html">Back</a></li>
+<li><a href="artists.html">Artists</a></li>
+
+
+</ul>
+
+
+
+
+<hr color="#FF00FF">
+
+
+
+
+
+
+
+</font>
+
+
+<!-- MAIN CONTENT -->
+<td valign="top" bgcolor="black">
+
+
+
+<br><br>
+
+<font size="6" face="Arial" color="red">
+<b>Alistair Martin</b>
+</font>
+
+
+<p>
+
+
+
+
+<!-- IMAGE GALLERY -->
+
+<br><br>
+
+<center>
+
+<font size="5" face="Arial" color="yellow">
+<b>IMAGE GALLERY</b>
+</font>
+
+<br><br>
+
+<table width="100%" border="4" bordercolor="#FF00FF" bgcolor="#000000" cellpadding="8">
+<tr>
+
+<!-- Image 1 -->
+<td align="center" width="33%">
+<a href="al4.jpg" target="_blank">
+<img src="al4.jpg" width="150" border="3">
+</a>
+
+</td>
+
+<!-- Image 2 -->
+<td align="center" width="33%">
+<a href="am.jpg" target="_blank">
+<img src="am.jpg" width="150" border="3">
+</a>
+
+</td>
+
+<!-- Image 3 -->
+<td align="center" width="33%">
+<a href="al3.jpg" target="_blank">
+<img src="al3.jpg" width="150" border="3">
+</a>
+
+</td>
+
+</tr>
+</table>
+
+<br>
+
+<font size="2" face="Courier New" color="#00FFFF">
+Click images for full resolution
+</font>
+
+</center>
+
+<!-- IMAGE GALLERY -->
+
+<br>
+
+<br>
+
+<script>
+
+const canvas = document.getElementById("snakeGame");
+const ctx = canvas.getContext("2d");
+
+const grid = 10;
+let count = 0;
+
+let snake = {
+  x: 100,
+  y: 100,
+  dx: grid,
+  dy: 0,
+  cells: [],
+  maxCells: 4
+};
+
+let apple = {
+  x: 160,
+  y: 160
+};
+
+function getRandomInt(min,max){
+  return Math.floor(Math.random()*(max-min))+min;
+}
+
+function gameLoop(){
+  requestAnimationFrame(gameLoop);
+
+  if(++count < 6){
+    return;
+  }
+
+  count = 0;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  snake.x += snake.dx;
+  snake.y += snake.dy;
+
+  if(snake.x < 0) snake.x = canvas.width-grid;
+  else if(snake.x >= canvas.width) snake.x = 0;
+
+  if(snake.y < 0) snake.y = canvas.height-grid;
+  else if(snake.y >= canvas.height) snake.y = 0;
+
+  snake.cells.unshift({x:snake.x,y:snake.y});
+
+  if(snake.cells.length > snake.maxCells){
+    snake.cells.pop();
+  }
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(apple.x,apple.y,grid-1,grid-1);
+
+  ctx.fillStyle = "lime";
+
+  snake.cells.forEach(function(cell,index){
+
+    ctx.fillRect(cell.x,cell.y,grid-1,grid-1);
+
+    if(cell.x === apple.x && cell.y === apple.y){
+      snake.maxCells++;
+      apple.x = getRandomInt(0,20)*grid;
+      apple.y = getRandomInt(0,20)*grid;
+    }
+
+    for(let i=index+1;i<snake.cells.length;i++){
+      if(cell.x === snake.cells[i].x && cell.y === snake.cells[i].y){
+        snake.x = 100;
+        snake.y = 100;
+        snake.cells = [];
+        snake.maxCells = 4;
+        snake.dx = grid;
+        snake.dy = 0;
+
+        apple.x = getRandomInt(0,20)*grid;
+        apple.y = getRandomInt(0,20)*grid;
+      }
+    }
+
+  });
+}
+
+document.addEventListener("keydown",function(e){
+
+  if(e.key === "ArrowLeft" && snake.dx === 0){
+    snake.dx = -grid;
+    snake.dy = 0;
+  }
+
+  else if(e.key === "ArrowUp" && snake.dy === 0){
+    snake.dy = -grid;
+    snake.dx = 0;
+  }
+
+  else if(e.key === "ArrowRight" && snake.dx === 0){
+    snake.dx = grid;
+    snake.dy = 0;
+  }
+
+  else if(e.key === "ArrowDown" && snake.dy === 0){
+    snake.dy = grid;
+    snake.dx = 0;
+  }
+
+});
+
+requestAnimationFrame(gameLoop);
+
+</script>
+
+<script>
+function playPause(id){
+  let a = document.getElementById(id);
+  if(a.paused){ a.play(); } else { a.pause(); }
+}
+
+function setVolume(id, v){
+  document.getElementById(id).volume = v;
+}
+
+// Seek sliders
+const seekSliders = [
+  {audio:'song1', slider:'seek1'},
+  {audio:'song2', slider:'seek2'},
+  {audio:'song3', slider:'seek3'}
+];
+
+seekSliders.forEach(obj => {
+  let audio = document.getElementById(obj.audio);
+  let slider = document.getElementById(obj.slider);
+
+  // Update slider as song plays
+  audio.addEventListener('timeupdate', function(){
+    if(audio.duration) slider.value = (audio.currentTime / audio.duration) * 100;
+  });
+
+  // Jump to position when slider is dragged
+  slider.addEventListener('input', function(){
+    if(audio.duration) audio.currentTime = (slider.value / 100) * audio.duration;
+  });
+});
+</script>
+
+
+<center>Copyright © Christopher Forsman 2017 </center>
+</body>
+
+
+
+</html>
